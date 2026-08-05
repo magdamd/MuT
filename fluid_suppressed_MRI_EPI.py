@@ -77,7 +77,7 @@ def seq_EPI_2D(
         seq.add_block(pp.make_delay(TI))
     # Define RF events
     rf1, _, _ = pp.make_sinc_pulse(
-        flip_angle=FA.item(), duration=rf_duration,
+        flip_angle=FA, duration=rf_duration,
         slice_thickness=slice_thickness, apodization=rf_apodization,
         time_bw_product=rf_time_bw_product, system=system, return_gz=True
     )
