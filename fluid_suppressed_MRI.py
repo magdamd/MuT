@@ -105,14 +105,10 @@ def fluid_suppressed_MRI(
 
     # change for inversion pulse if fluid suppression is desired
     if fluid_suppression:
-        rf_inv, gz_inv, _ = pp.make_sinc_pulse(
+        rf_inv = pp.make_block_pulse(
             flip_angle=np.pi,
             duration=2e-3,
-            slice_thickness=fov_z,
-            apodization=0.42,
-            time_bw_product=4,
             system=system,
-            return_gz=True,
             delay=system.rf_dead_time,
             use='inversion',
         )
