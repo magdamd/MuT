@@ -70,7 +70,6 @@ def seq_EPI_2D(
         rf_inv = pp.make_block_pulse(
             flip_angle=np.pi, 
             duration=2e-3,
-            slice_thickness=slice_thickness,
             system=system
         )
         seq.add_block(rf_inv)
