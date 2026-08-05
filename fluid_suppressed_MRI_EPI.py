@@ -9,7 +9,7 @@
 # --- Notebook setup (Colab / Jupyter / JupyterLab / VS Code) ---
 _ipython = globals().get('get_ipython', lambda: None)()  # detect nb
 if _ipython is not None:
-    _ipython.run_line_magic('pip', 'install -q pypulseq==1.5.0.post1')
+    _ipython.run_line_magic('pip', 'install -q numpy matplotlib pypulseq==1.5.0.post1')
 # --- Notebook setup end ---
 
 import numpy as np
