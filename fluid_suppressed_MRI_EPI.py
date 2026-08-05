@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = [10, 5]
 plt.rcParams['figure.dpi'] = 100
 
-def seq_EPI_2D(
+def fluid_suppressed_MRI_EPI(
     fov=(220e-3, 220e-3, 8e-3),
     Nread=64,
     Nphase=64,
@@ -136,7 +136,7 @@ eddy_currents_induced_delay = 0.0000015 # @param {type: "slider", min: -1e-4, ma
 # Moved to function parameters
 blip_duration = 0.1e-3
 # Generate sequence using standard parameters
-seq = seq_EPI_2D(
+seq = fluid_suppressed_MRI_EPI(
     fov=(fov, fov, slice_thickness),
     Nread=Nread,
     Nphase=Nphase,
