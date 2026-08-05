@@ -20,14 +20,12 @@ import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = [10, 5]
 plt.rcParams['figure.dpi'] = 100
 
-def fluid_suppressed_MRI_EPI(
+def seq_EPI_2D(
     fov=(220e-3, 220e-3, 8e-3),
     Nread=64,
     Nphase=64,
     Npart=1,
     FA=torch.tensor(90 * np.pi / 180),
-    fluid_suppression=True,
-    TI=0.7e-3,
     slice_thickness=8e-3,
     experiment_id='EPI_2D',
     system=None,
@@ -70,17 +68,6 @@ def fluid_suppressed_MRI_EPI(
         )
     # Define the sequence
     seq = pp.Sequence()
-    if fluid_suppression:
-        # Inversion pulse for fluid suppression
-        rf_inv = pp.make_block_pulse(
-            flip_angle=np.pi, 
-            duration=2e-3, 
-            system=system,
-            delay=system.rf_dead_time, 
-            use='inversion'
-        )
-        seq.add_block(rf_inv)
-        seq.add_block(pp.make_delay(TI))
     # Define RF events
     rf1, _, _ = pp.make_sinc_pulse(
         flip_angle=FA.item(), duration=rf_duration,
@@ -136,7 +123,7 @@ eddy_currents_induced_delay = 0.0000015 # @param {type: "slider", min: -1e-4, ma
 # Moved to function parameters
 blip_duration = 0.1e-3
 # Generate sequence using standard parameters
-seq = fluid_suppressed_MRI_EPI(
+seq = seq_EPI_2D(
     fov=(fov, fov, slice_thickness),
     Nread=Nread,
     Nphase=Nphase,
