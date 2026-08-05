@@ -13,19 +13,14 @@ if _ipython is not None:
 # --- Notebook setup end ---
 
 import numpy as np
-import MRzeroCore as mr0
 import pypulseq as pp
-import torch
-import matplotlib.pyplot as plt
-plt.rcParams['figure.figsize'] = [10, 5]
-plt.rcParams['figure.dpi'] = 100
 
 def seq_EPI_2D(
     fov=(220e-3, 220e-3, 8e-3),
     Nread=64,
     Nphase=64,
     Npart=1,
-    FA=torch.tensor(90 * np.pi / 180),
+    FA=90 * np.pi / 180,
     slice_thickness=8e-3,
     experiment_id='EPI_2D',
     system=None,
@@ -102,130 +97,8 @@ def seq_EPI_2D(
     seq.set_definition('matrix', [Nread, Nphase, Npart])
     return seq
 
-#@title quick 2D brain phantom sim and plot
-# Define parameters as plain variables
-experiment_id = 'EPI_2D'
-fov = 240e-3 # @param {type:"number"} # Define FOV
-slice_thickness = 8e-3
-Nread = 64  # @param {type:"integer"} # frequency encoding steps/samples
-Nphase = 64 # @param {type:"integer"} # phase encoding steps/samples
-Npart = 1
-FA = torch.tensor(90 * np.pi / 180)
-slice_thickness = 8e-3
-# EPI-specific parameters
-rf_duration = 1e-3
-rf_apodization = 0.5
-rf_time_bw_product = 4
-adc_duration_OG = 0.25e-3  # @param {type: "slider", min: 0.25e-3, max: 10e-3, step: 0.05e-3}
-# Moved to function parameters
-eddy_currents = True       # @param {type:"boolean"}
-eddy_currents_induced_delay = 0.0000015 # @param {type: "slider", min: -1e-4, max: 1e-4, step: 1e-8}
-# Moved to function parameters
-blip_duration = 0.1e-3
-# Generate sequence using standard parameters
-seq = seq_EPI_2D(
-    fov=(fov, fov, slice_thickness),
-    Nread=Nread,
-    Nphase=Nphase,
-    Npart=Npart,
-    FA=FA,
-    slice_thickness=slice_thickness,
-    experiment_id=experiment_id,
-    rf_duration=rf_duration,
-    rf_apodization=rf_apodization,
-    rf_time_bw_product=rf_time_bw_product,
-    adc_duration_OG=adc_duration_OG,
-    eddy_currents=eddy_currents,
-    eddy_currents_induced_delay=eddy_currents_induced_delay,
-    blip_duration=blip_duration
-)
-# Quick simulation and plot
-signal, _ = mr0.util.simulate(seq)
-seq.plot(plot_now=False)
-mr0.util.insert_signal_plot(seq=seq, signal=signal.numpy())
-plt.show()
-# MR IMAGE RECONSTRUCTION
-fig = plt.figure(figsize=(10, 2))
-kspace_adc = torch.reshape(signal, (Nphase, Nread)).clone().t()
-kspace = kspace_adc
-kspace[:, 0::2] = torch.flip(kspace[:, 0::2], [0])[:, :]
-# fftshift iFFT fftshift
-spectrum = torch.fft.fftshift(kspace)
-space = torch.fft.ifft2(spectrum)
-space = torch.fft.ifftshift(space)
-plt.subplot(141)
-plt.title('k-space')
-mr0.util.imshow(np.abs(kspace.numpy()))
-plt.subplot(142)
-plt.title('log. k-space')
-mr0.util.imshow(np.log(np.abs(kspace.numpy())))
-plt.subplot(143)
-plt.title('FFT-magnitude')
-mr0.util.imshow(np.abs(space.numpy()))
-plt.colorbar()
-plt.subplot(144)
-plt.title('FFT-phase')
-mr0.util.imshow(np.angle(space.numpy()), vmin=-np.pi, vmax=np.pi)
-plt.colorbar();
+main = seq_EPI_2D
 
-# @title Export sequence as .seq file
-# Check whether the timing of the sequence is correct
-ok, error_report = seq.check_timing()
-if ok:
-    print('Timing check passed successfully')
-else:
-    print('Timing check failed. Error listing follows:')
-    [print(e) for e in error_report]
-# Prepare the sequence output for the scanner
-seq_write_signature = seq.write(experiment_id + '.seq')
 
-# Phantom simulation with brain phantom
-sz = [64, 64]
-# Load phantom object from file
-obj_p = mr0.VoxelGridPhantom.load_mat('numerical_brain_cropped.mat')
-obj_p = obj_p.interpolate(sz[0], sz[1], 1)
-# Manipulate loaded data
-obj_p.D *= 0
-T2dash = 0.028001# @param {type: "slider", min: 1e-6, max: 100e-3, step:1e-3}
-obj_p.T2dash[:] = T2dash
-B0factor = 5# @param {type: "slider", min: -20, max: 20, step:1}
-obj_p.B0 *= B0factor    # alter the B0 inhomogeneity
-obj_p.plot()
-# Convert Phantom into simulation data
-obj_p = obj_p.build()
-# Simulate the sequence
-seq0 = mr0.Sequence.import_file(experiment_id + '.seq')
-seq0.plot_kspace_trajectory()
-# Simulate the sequence
-graph = mr0.compute_graph(seq0, obj_p, 200, 1e-3)
-signal = mr0.execute_graph(graph, seq0, obj_p, print_progress=False)
-# PLOT sequence with signal in the ADC subplot
-plt.close(11)
-plt.close(12)
-seq.plot(plot_now=False)
-mr0.util.insert_signal_plot(seq=seq, signal=signal.numpy())
-plt.tight_layout()
-plt.show()
-# MR IMAGE RECONSTRUCTION
-fig = plt.figure(figsize=(10, 2))
-kspace_adc = torch.reshape(signal, (Nphase, Nread)).clone().t()
-kspace = kspace_adc
-kspace[:, 0::2] = torch.flip(kspace[:, 0::2], [0])[:, :]
-# fftshift iFFT fftshift
-spectrum = torch.fft.fftshift(kspace)
-space = torch.fft.ifft2(spectrum)
-space = torch.fft.ifftshift(space)
-plt.subplot(141)
-plt.title('k-space')
-mr0.util.imshow(np.abs(kspace.numpy()))
-plt.subplot(142)
-plt.title('log. k-space')
-mr0.util.imshow(np.log(np.abs(kspace.numpy())))
-plt.subplot(143)
-plt.title('FFT-magnitude')
-mr0.util.imshow(np.abs(space.numpy()))
-plt.colorbar()
-plt.subplot(144)
-plt.title('FFT-phase')
-mr0.util.imshow(np.angle(space.numpy()), vmin=-np.pi, vmax=np.pi)
-plt.colorbar();
+if __name__ == '__main__':
+    main()
