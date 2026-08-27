@@ -22,7 +22,7 @@ def seq_EPI_2D(
     Npart=1,
     FA=90 * np.pi / 180,
     fluid_suppression=True,
-    TI=0.5,
+    TI=2.89,
     slice_thickness=8e-3,
     experiment_id='EPI_2D',
     system=None,
@@ -73,7 +73,8 @@ def seq_EPI_2D(
             system=system
         )
         seq.add_block(rf_inv)
-        seq.add_block(pp.make_delay(TI))
+        TI_delay = pp.make_delay(TI)
+        seq.add_block(TI_delay)
     # Define RF events
     rf1, _, _ = pp.make_sinc_pulse(
         flip_angle=FA, duration=rf_duration,
