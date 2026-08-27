@@ -22,7 +22,7 @@ def seq_EPI_2D(
     Npart=1,
     FA=90 * np.pi / 180,
     fluid_suppression=True,
-    TI=2.89,
+    TI=0,
     slice_thickness=8e-3,
     experiment_id='EPI_2D',
     system=None,
